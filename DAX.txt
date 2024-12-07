@@ -1,0 +1,93 @@
+Accidents_by_Road_Condition = 
+    VAR GoodRoadConditions = {"Dry", "Wet/Damp"}
+    VAR BadRoadConditions = {"Snow", "Ice", "Flood", "Other"}
+    VAR CurrentRoadCondition = VALUES(Data[Road_Surface_Conditions (groups)])
+    RETURN
+        IF (
+            ISFILTERED(Data[Road_Surface_Conditions (groups)]),
+            IF (
+                COUNTROWS(CurrentRoadCondition) = 1,
+                IF (
+                    CurrentRoadCondition IN GoodRoadConditions,
+                    CALCULATE(COUNTROWS(Data), Data[Road_Surface_Conditions (groups)] = CurrentRoadCondition),
+                    IF (
+                        CurrentRoadCondition IN BadRoadConditions,
+                        CALCULATE(COUNTROWS(Data), Data[Road_Surface_Conditions (groups)] = CurrentRoadCondition),
+                        CALCULATE(COUNTROWS(Data))
+                    )
+                ),
+                BLANK()
+            ),
+            CALCULATE(COUNTROWS(Data))
+        )
+
+#-------------------------------------------------------------------------------------------------------------------------------
+
+Accidents_in_Bad_Weather = 
+   VAR BadWeatherConditions = {"Rainy", "Snowy", "Fine","Others"}
+   RETURN
+      CALCULATE(
+         COUNTROWS(Data),
+         Data[Weather_Conditions (groups)] IN BadWeatherConditions
+      )
+#----------------------------------------------------------------------------------------------------------------------------------
+
+AvgCasualtiesPerAccident = 
+   DIVIDE(
+      SUM(Data[Number_of_Casualties]),
+      COUNTROWS(Data)
+   )
+#-----------------------------------------------------------------------------------------------------------------------------------
+
+TotalAccidents = COUNTROWS(Data)
+ 
+TotalCasualities = SUM(Data[Number_of_Casualties])
+ 
+YoY Accidents = ([CY Accidents] - [PY Accidents]) / [PY Accidents]
+ 
+YoY casualities = ([CY Casualities] - [PY Casualities]) / [PY Casualities]
+
+#-------------------------------------------------------------------------------------------------------------------------------------------
+CY Accidents = TOTALYTD(COUNT(Data[Accident_Index]), 'Calendar'[Date])
+
+CY Casualities = TOTALYTD(SUM(Data[Number_of_Casualties]),'Calendar'[Date]) 
+
+PY Accidents = CALCULATE(COUNT(Data[Accident_Index]),SAMEPERIODLASTYEAR('Calendar'[Date]))
+
+PY Casualities = CALCULATE(SUM(Data[Number_of_Casualties]), SAMEPERIODLASTYEAR('Calendar'[Date]))
+
+#-------------------------------------------------------------------------------------------------------------------------------------------
+
+Speed_Limit_Category = SWITCH(
+   [Speed_limit],
+   10,"Low",
+   20,"Low",
+   30, "Low",
+   40,"Low",
+   50, "Medium",
+   60,"High",
+   70, "High",
+   "Fast and Furious"
+)
+
+Weekday_Indicator = 
+   SWITCH (
+      [Day_of_Week],
+      "Monday", "Weekday",
+      "Tuesday", "Weekday",
+      "Wednesday", "Weekday",
+      "Thursday", "Weekday",
+      "Friday", "Weekday",
+      "Saturday", "Weekend",
+      "Sunday", "Weekend",
+      "Unknown"
+   )
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------------
+
+Month = FORMAT('Calendar'[Date], "mmm")
+
+Month Number = MONTH('Calendar'[Date])
+
+Year = YEAR('Calendar'[Date])
